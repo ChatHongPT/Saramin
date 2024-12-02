@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>결과창</title>
+    <title>Search Result</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_2.css') }}">
 </head>
 <body>
-    <div class="navbar">
-        <a href="/" class="main-button">메인 페이지</a>
-    </div>
-    <div class="container">
-        <h1>사람인 검색 결과</h1>
-        <table cellpadding="10" width="700" height="100">
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="main-button">🏠 Main Page</a>
+            <span class="navbar-title">사람In Search Result</span>
+        </div>
+    </nav>
+    <div class="container content">
+        <h1>사람In Search search_results</h1>
+        <table>
             <thead>
                 <tr>
-                    <th scope="col">제목</th>
-                    <th scope="col">날짜</th>
-                    <th scope="col">상태</th>
-                    <th scope="col">기술</th>
-                    <th scope="col">기업정보</th>
+                    <th>제목</th>
+                    <th>날짜</th>
+                    <th>상태</th>
+                    <th>기술</th>
+                    <th>기업정보</th>
                 </tr>
             </thead>
             <tbody>
