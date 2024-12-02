@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사람In Web Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_1.css') }}">
+</head>
+<body>
+    <section>
+        <h2>🖥️사람In 서비스에 오신걸 환영합니다 개발자님.🖥️</h2>
+        <h2>----------------------------------------------</h2>
+        <br>
+        <h3>💼 내가 취업할 수 있는 분야는? 💼</h3>
+        <h3>Tech Stack을 입력하세요.</h3>
+        <br>
+        <form action="{{ url_for('search_results') }}" method="GET">
+            <div class="search">
+                <input class="search-txt" type="text" id="query" name="query" placeholder="검색어를 입력하세요.">
+                <button type="submit">Search</button>
+            </div>
+        </form>
+    </section>
+</body>
+</html>
