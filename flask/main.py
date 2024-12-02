@@ -27,7 +27,7 @@ def report():
         "report.html", searchsearch=word, resultsNumber=len(jobs), jobs=jobs)
 
 
-@app.route("/export")
+@app.route("/expor")
 def export():
     try:
         word = request.args.get('word')
