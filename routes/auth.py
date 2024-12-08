@@ -1,32 +1,37 @@
-from flask import Blueprint, request, jsonify
-from services.auth import generate_access_token, generate_refresh_token, verify_access_token
+import jwt
+import datetime
+from flask import request, jsonify
+from functools import wraps
+from config import SECRET_KEY
 
-auth_bp = Blueprint("auth", __name__)
+def generate_access_token(data, expires_in=3600):
+    payload = {
+        "data": data,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(seconds=expires_in),
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
-@auth_bp.route("/login", methods=["POST"])
-def login():
-    data = request.json
-    email = data.get("email")
-    password = data.get("password")
+def generate_refresh_token(data):
+    payload = {"data": data}
+    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
-    # 사용자 인증 로직 (예시 데이터 사용)
-    user = {"email": "user@example.com", "password": "password123"}
-    if email != user["email"] or password != user["password"]:
-        return jsonify({"message": "Invalid credentials"}), 401
+def verify_access_token(token):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return payload["data"], None
+    except jwt.ExpiredSignatureError:
+        return None, "Token expired"
+    except jwt.InvalidTokenError:
+        return None, "Invalid token"
 
-    access_token = generate_access_token({"email": email})
-    refresh_token = generate_refresh_token({"email": email})
-    return jsonify({"access_token": access_token, "refresh_token": refresh_token}), 200
-
-@auth_bp.route("/token/refresh", methods=["POST"])
-def refresh_token():
-    refresh_token = request.headers.get("Authorization")
-    if not refresh_token:
-        return jsonify({"message": "Refresh token is missing"}), 403
-
-    data, error = verify_access_token(refresh_token)
-    if error:
-        return jsonify({"message": error}), 403
-
-    new_access_token = generate_access_token(data)
-    return jsonify({"access_token": new_access_token}), 200
+def jwt_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get("Authorization")
+        if not token:
+            return jsonify({"message": "Token is missing"}), 403
+        data, error = verify_access_token(token)
+        if error:
+            return jsonify({"message": error}), 403
+        return f(*args, **kwargs, current_user=data)
+    return decorated_function
