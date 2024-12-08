@@ -1,10 +1,11 @@
-from flask import Flask
-from routes.jobs import jobs_bp
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
-# API 라우트 등록
-app.register_blueprint(jobs_bp, url_prefix="/api/jobs")
+# 필요한 라우트가 없으면 "Not Found" 에러 발생
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
