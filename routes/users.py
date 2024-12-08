@@ -1,10 +1,10 @@
+import base64
 from flask import Blueprint, request, jsonify
-from werkzeug.security import generate_password_hash, check_password_hash
 from services.database import db
+from services.auth import generate_jwt, jwt_required
 
 users_bp = Blueprint("users", __name__)
 
-# 사용자 등록
 @users_bp.route("/register", methods=["POST"])
 def register():
     data = request.json
@@ -15,12 +15,10 @@ def register():
     if db.users.find_one({"email": email}):
         return jsonify({"message": "Email already exists"}), 400
 
-    hashed_password = generate_password_hash(password)
-    user = {"email": email, "password": hashed_password, "name": name}
-    db.users.insert_one(user)
+    hashed_password = base64.b64encode(password.encode()).decode()
+    db.users.insert_one({"email": email, "password": hashed_password, "name": name})
     return jsonify({"message": "User registered successfully"}), 201
 
-# 사용자 로그인
 @users_bp.route("/login", methods=["POST"])
 def login():
     data = request.json
@@ -28,13 +26,12 @@ def login():
     password = data.get("password")
 
     user = db.users.find_one({"email": email})
-    if not user or not check_password_hash(user["password"], password):
-        return jsonify({"message": "Invalid email or password"}), 401
+    if not user:
+        return jsonify({"message": "User not found"}), 404
 
-    return jsonify({"message": "Login successful", "user": {"email": email, "name": user["name"]}})
+    hashed_password = base64.b64encode(password.encode()).decode()
+    if hashed_password != user["password"]:
+        return jsonify({"message": "Invalid credentials"}), 401
 
-# 사용자 조회
-@users_bp.route("/", methods=["GET"])
-def get_users():
-    users = list(db.users.find({}, {"_id": 0, "password": 0}))
-    return jsonify(users)
+    token = generate_jwt({"email": email})
+    return jsonify({"token": token, "user": {"email": email, "name": user["name"]}})
