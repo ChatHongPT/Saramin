@@ -6,54 +6,19 @@
     <title>Job Portal</title>
     <link href="/static/css/tailwind.min.css" rel="stylesheet">
 </head>
-
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
-    <header class="bg-blue-600 p-4 shadow-md">
-        <div class="container mx-auto text-white flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-2xl font-bold">사람In</h1>
-            </div>
+<body class="bg-gray-100">
+    <header class="bg-blue-600 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl text-white">사람人</h1>
             <nav>
-                <a href="/" class="text-white px-4 hover:underline">Home</a>
-                <a href="/api/jobs" class="text-white px-4 hover:underline">Jobs</a>
-                <a href="/api/users" class="text-white px-4 hover:underline">Users</a>
+                <a href="/" class="text-white hover:underline px-4">Home</a>
+                <a href="/api/jobs" class="text-white hover:underline px-4">Jobs</a>
+                <a href="/api/users" class="text-white hover:underline px-4">Users</a>
             </nav>
         </div>
     </header>
-    
     <main class="container mx-auto mt-8">
-        <section class="bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-2xl font-bold mb-4">Welcome to the Job Portal!</h2>
-            <p class="text-gray-700 mb-4">
-                Explore job opportunities, register as a user, and manage your applications seamlessly.
-            </p>
-            <div class="flex space-x-4">
-                <a href="/api/jobs" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600">
-                    View Jobs
-                </a>
-                <a href="/api/users" class="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600">
-                    Manage Users
-                </a>
-            </div>
-        </section>
-        <section class="mt-8">
-            <h3 class="text-xl font-bold mb-4">Featured Jobs</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Job Card Example -->
-                <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h4 class="text-lg font-bold">Software Engineer</h4>
-                    <p class="text-gray-700">ABC Corp, Seoul</p>
-                    <p class="text-gray-500 text-sm">Deadline: 2024-12-31</p>
-                    <a href="#" class="text-blue-500 hover:underline">View Details</a>
-                </div>
-                <!-- Add more job cards dynamically using Flask if needed -->
-            </div>
-        </section>
+        <h2 class="text-xl font-bold">Welcome to the Job Portal!</h2>
     </main>
-    <footer class="bg-gray-800 text-white p-4 mt-8">
-        <div class="container mx-auto text-center">
-            <p>&copy; 2024 Job Portal. All rights reserved.</p>
-        </div>
-    </footer>
 </body>
 </html>
