@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flasgger import Swagger
 from routes.users import users_bp
 from routes.jobs import jobs_bp
@@ -8,7 +8,7 @@ from routes.auth import auth_bp
 app = Flask(__name__)
 Swagger(app)
 
-# 블루프린트 등록
+# API 라우트 등록
 app.register_blueprint(users_bp, url_prefix="/api/users")
 app.register_blueprint(jobs_bp, url_prefix="/api/jobs")
 app.register_blueprint(applications_bp, url_prefix="/api/applications")
