@@ -2,6 +2,16 @@ import requests
 from bs4 import BeautifulSoup
 
 def crawl_saramin(keyword, pages=1):
+    """
+    사람인 데이터를 크롤링하는 함수.
+
+    Args:
+        keyword (str): 검색 키워드
+        pages (int): 검색 페이지 수
+
+    Returns:
+        list: 크롤링된 채용 공고 리스트
+    """
     jobs = []
     headers = {'User-Agent': 'Mozilla/5.0'}
     
@@ -11,21 +21,21 @@ def crawl_saramin(keyword, pages=1):
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
+        # 채용 공고 추출
         job_listings = soup.select('.item_recruit')
         for job in job_listings:
-            try:
-                company = job.select_one('.corp_name a').text.strip()
-                title = job.select_one('.job_tit a').text.strip()
-                link = 'https://www.saramin.co.kr' + job.select_one('.job_tit a')['href']
-                location = job.select('.job_condition span')[0].text.strip() if job.select('.job_condition span') else ''
-                jobs.append({
-                    '회사명': company,
-                    '제목': title,
-                    '링크': link,
-                    '지역': location
-                })
-            except Exception as e:
-                print(f"Error parsing job: {e}")
-                continue
+            title = job.select_one('.job_tit a').text.strip()
+            company = job.select_one('.corp_name a').text.strip()
+            location = job.select_one('.job_condition span').text.strip()
+            link = 'https://www.saramin.co.kr' + job.select_one('.job_tit a')['href']
+            deadline = job.select_one('.job_date .date').text.strip()
+
+            jobs.append({
+                "title": title,
+                "company": company,
+                "location": location,
+                "link": link,
+                "deadline": deadline
+            })
 
     return jobs
