@@ -1,8 +1,10 @@
-from flask import request, jsonify
+from flask import jsonify
 
-def validate_request(required_fields):
-    data = request.json
-    missing_fields = [field for field in required_fields if field not in data]
-    if missing_fields:
-        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
-    return data
+def success_response(data=None, pagination=None):
+    response = {"status": "success", "data": data or {}}
+    if pagination:
+        response["pagination"] = pagination
+    return jsonify(response)
+
+def error_response(message, code="ERROR_CODE"):
+    return jsonify({"status": "error", "message": message, "code": code}), 400
