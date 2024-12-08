@@ -1,37 +1,38 @@
-import jwt
-import datetime
-from flask import request, jsonify
-from functools import wraps
-from config import SECRET_KEY
+from flask import Blueprint, request
+from services.auth import generate_access_token, generate_refresh_token
+from services.utils import success_response, error_response
+from services.database import db
+import base64
 
-def generate_access_token(data, expires_in=3600):
-    payload = {
-        "data": data,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(seconds=expires_in),
-    }
-    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+auth_bp = Blueprint("auth", __name__)
 
-def generate_refresh_token(data):
-    payload = {"data": data}
-    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+@auth_bp.route("/register", methods=["POST"])
+def register():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+    name = data.get("name")
 
-def verify_access_token(token):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return payload["data"], None
-    except jwt.ExpiredSignatureError:
-        return None, "Token expired"
-    except jwt.InvalidTokenError:
-        return None, "Invalid token"
+    if db.users.find_one({"email": email}):
+        return error_response("Email already exists", code="EMAIL_EXISTS")
 
-def jwt_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        token = request.headers.get("Authorization")
-        if not token:
-            return jsonify({"message": "Token is missing"}), 403
-        data, error = verify_access_token(token)
-        if error:
-            return jsonify({"message": error}), 403
-        return f(*args, **kwargs, current_user=data)
-    return decorated_function
+    encoded_password = base64.b64encode(password.encode()).decode()
+    db.users.insert_one({"email": email, "password": encoded_password, "name": name})
+    return success_response({"message": "User registered successfully"})
+
+@auth_bp.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+
+    user = db.users.find_one({"email": email})
+    if not user:
+        return error_response("User not found", code="USER_NOT_FOUND")
+
+    if base64.b64decode(user["password"]).decode() != password:
+        return error_response("Invalid credentials", code="INVALID_CREDENTIALS")
+
+    access_token = generate_access_token({"email": email})
+    refresh_token = generate_refresh_token({"email": email})
+    return success_response({"access_token": access_token, "refresh_token": refresh_token})
