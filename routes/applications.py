@@ -1,58 +1,36 @@
-from flask import Blueprint, request
-from services.database import db
-from services.utils import success_response, error_response
+from flask import Blueprint, jsonify, request
+from services.database import applications_collection
 from bson import ObjectId
+from datetime import datetime
 
-applications_bp = Blueprint("applications", __name__)
+applications_bp = Blueprint('applications', __name__)
 
-@applications_bp.route("/", methods=["POST"])
-def apply():
-    """
-    지원하기 API
-    """
+# 지원하기
+@applications_bp.route('/', methods=['POST'])
+def apply_job():
     data = request.json
-    required_fields = ["user_id", "job_id"]
-    missing_fields = [field for field in required_fields if field not in data]
-    if missing_fields:
-        return error_response(f"Missing fields: {', '.join(missing_fields)}")
+    user_id = data.get('user_id')
+    job_id = data.get('job_id')
 
-    # 중복 지원 체크
-    if db.applications.find_one({"user_id": data["user_id"], "job_id": data["job_id"]}):
-        return error_response("Already applied to this job", code="DUPLICATE_APPLICATION")
+    # 중복 지원 확인
+    if applications_collection.find_one({"user_id": user_id, "job_id": job_id}):
+        return jsonify({"status": "error", "message": "Already applied"}), 400
 
-    application = {
-        "user_id": data["user_id"],
-        "job_id": data["job_id"],
-        "status": "Applied",
-        "applied_at": datetime.now()
-    }
-    db.applications.insert_one(application)
-    return success_response({"message": "Application submitted successfully"})
+    applications_collection.insert_one({
+        "user_id": user_id,
+        "job_id": job_id,
+        "application_date": datetime.now(),
+        "status": "pending"
+    })
+    return jsonify({"status": "success", "message": "Application submitted successfully"}), 201
 
-@applications_bp.route("/", methods=["GET"])
-def list_applications():
-    """
-    지원 내역 조회 API
-    """
-    user_id = request.args.get("user_id")
-    if not user_id:
-        return error_response("User ID is required", code="USER_ID_REQUIRED")
+# 지원 내역 조회
+@applications_bp.route('/', methods=['GET'])
+def get_applications():
+    user_id = request.args.get('user_id')
+    applications = list(applications_collection.find({"user_id": user_id}))
 
-    applications = list(db.applications.find({"user_id": user_id}))
-    return success_response(applications)
+    for app in applications:
+        app['_id'] = str(app['_id'])
 
-@applications_bp.route("/<application_id>", methods=["DELETE"])
-def cancel_application(application_id):
-    """
-    지원 취소 API
-    """
-    application = db.applications.find_one({"_id": ObjectId(application_id)})
-    if not application:
-        return error_response("Application not found", code="APPLICATION_NOT_FOUND")
-
-    # 상태 업데이트
-    db.applications.update_one(
-        {"_id": ObjectId(application_id)},
-        {"$set": {"status": "Cancelled"}}
-    )
-    return success_response({"message": "Application cancelled successfully"})
+    return jsonify({"status": "success", "data": applications})

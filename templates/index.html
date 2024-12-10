@@ -1,37 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Portal</title>
-    <link href="/static/css/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
-    <header class="bg-blue-600 p-4 shadow-lg">
-        <div class="container mx-auto text-white flex justify-between items-center">
-            <h1 class="text-3xl font-bold">사람人</h1>
-            <nav class="space-x-4">
-                <a href="/" class="hover:underline">Home</a>
-                <a href="/api/jobs" class="hover:underline">Jobs</a>
-                <a href="/api/users" class="hover:underline">Users</a>
-                <a href="/api/auth" class="hover:underline">Auth</a>
-            </nav>
-        </div>
-    </header>
-    <main class="container mx-auto mt-8">
-        <section class="bg-white shadow-lg rounded-lg p-6">
-            <h2 class="text-2xl font-bold mb-4">Welcome to the Job Portal!</h2>
-            <p class="text-gray-700 mb-4">
-                Explore job opportunities, manage your applications, and connect with employers.
-            </p>
-            <div class="flex space-x-4">
-                <a href="/api/jobs" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600">View Jobs</a>
-                <a href="/api/users" class="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600">Manage Users</a>
-            </div>
-        </section>
-    </main>
-    <footer class="bg-gray-800 text-white text-center p-4 mt-8">
-        &copy; 2024 Job Portal. All rights reserved.
-    </footer>
+<body>
+    <h1>Welcome to Job Portal</h1>
+    <a href="/jobs/list">View Jobs</a>
 </body>
 </html>

@@ -1,0 +1,44 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "Job Portal API"
+  description: "REST API for managing jobs, users, applications, and bookmarks."
+host: "localhost:5000"
+schemes:
+  - "http"
+paths:
+  /auth/register:
+    post:
+      summary: "Register a new user"
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              username:
+                type: "string"
+              email:
+                type: "string"
+              password:
+                type: "string"
+      responses:
+        201:
+          description: "User registered successfully"
+        400:
+          description: "Bad request"
+
+  /jobs:
+    get:
+      summary: "List all jobs"
+      parameters:
+        - name: "page"
+          in: "query"
+          type: "integer"
+          default: 1
+      responses:
+        200:
+          description: "List of jobs"
+        401:
+          description: "Unauthorized"

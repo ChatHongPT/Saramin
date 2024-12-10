@@ -1,59 +1,70 @@
-from flask import Blueprint, request
-from services.database import db
-from services.utils import success_response, error_response
+from flask import Blueprint, jsonify, request
+from services.database import jobs_collection
+from bson import ObjectId  # ObjectId 임포트 추가
 
-jobs_bp = Blueprint("jobs", __name__)
+jobs_bp = Blueprint('jobs', __name__)
 
-@jobs_bp.route("/", methods=["GET"])
+# 공고 목록 조회
+@jobs_bp.route('/', methods=['GET'])
+@jobs_bp.route('/list', methods=['GET'])  # '/list' 경로 추가
 def list_jobs():
-    """
-    채용 공고 목록 조회 API
-    ---
-    responses:
-      200:
-        description: 채용 공고 목록
-    """
-    page = int(request.args.get("page", 1))
-    per_page = 20
-    skip = (page - 1) * per_page
+    try:
+        # 페이지네이션 기본값 처리
+        page = int(request.args.get('page', 1))
+        per_page = 20
+        skip = (page - 1) * per_page
 
-    query = {}
-    if "location" in request.args:
-        query["location"] = request.args.get("location")
-    if "experience" in request.args:
-        query["experience"] = request.args.get("experience")
-    if "company" in request.args:
-        query["company"] = {"$regex": request.args.get("company"), "$options": "i"}
+        # 필터링 및 검색
+        query = {}
+        if "keyword" in request.args:
+             query["title"] = {"$regex": request.args["keyword"].strip(), "$options": "i"}
+        if "location" in request.args:
+            query["지역"] = {"$regex": f"^{request.args['location']}$", "$options": "i"}
 
-    jobs = list(db.job_postings.find(query).skip(skip).limit(per_page))
-    total_count = db.job_postings.count_documents(query)
+        # 디버깅: 생성된 쿼리 확인
+        print(f"Generated query: {query}")
 
-    return success_response(jobs, pagination={
-        "currentPage": page,
-        "totalPages": (total_count + per_page - 1) // per_page,
-        "totalItems": total_count
-    })
 
-@jobs_bp.route("/<job_id>", methods=["GET"])
-def job_detail(job_id):
-    """
-    채용 공고 상세 조회 API
-    """
-    job = db.job_postings.find_one({"_id": job_id})
-    if not job:
-        return error_response("Job not found", code="JOB_NOT_FOUND")
-    return success_response(job)
 
-@jobs_bp.route("/", methods=["POST"])
-def create_job():
-    """
-    채용 공고 등록 API
-    """
-    data = request.json
-    required_fields = ["title", "company", "location", "deadline"]
-    missing_fields = [field for field in required_fields if field not in data]
-    if missing_fields:
-        return error_response(f"Missing fields: {', '.join(missing_fields)}")
+        # 정렬
+        sort_field = request.args.get('sort', 'date_crawled')  # 기본 정렬 필드
+        sort_order = int(request.args.get('order', -1))       # 기본 정렬 순서: 내림차순
 
-    db.job_postings.insert_one(data)
-    return success_response({"message": "Job created successfully"})
+        # MongoDB 조회
+        print(f"Generated query: {query}")  # 디버깅용 로그
+        jobs = list(jobs_collection.find(query).skip(skip).limit(per_page).sort(sort_field, sort_order))
+        total_count = jobs_collection.count_documents(query)
+
+        # ObjectId를 문자열로 변환
+        for job in jobs:
+            job['_id'] = str(job['_id'])
+
+        return jsonify({
+            "status": "success",
+            "data": jobs,
+            "pagination": {
+                "currentPage": page,
+                "totalPages": (total_count + per_page - 1) // per_page,
+                "totalItems": total_count
+            }
+        }), 200
+    except Exception as e:
+        # 에러 처리
+        print(f"Error occurred: {e}")  # 디버깅용
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+# 공고 상세 조회
+@jobs_bp.route('/<job_id>', methods=['GET'])
+def get_job_detail(job_id):
+    try:
+        print(f"Received request for job ID: {job_id}")
+        job = jobs_collection.find_one({"_id": ObjectId(job_id)})
+        if not job:
+            print("Job not found in the database.")
+            return jsonify({"status": "error", "message": "Job not found"}), 404
+        job['_id'] = str(job['_id'])
+        return jsonify({"status": "success", "data": job}), 200
+    except Exception as e:
+        # `ObjectId` 변환 실패 및 기타 예외 처리
+        print(f"Invalid Job ID or Error: {e}")  # 디버깅용
+        return jsonify({"status": "error", "message": f"Invalid Job ID: {e}"}), 400
