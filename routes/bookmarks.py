@@ -24,14 +24,19 @@ def toggle_bookmark():
         bookmarks_collection.delete_one({"_id": bookmark["_id"]})
         return jsonify({"status": "success", "message": "Bookmark removed"}), 200
     else:
+        # 관련 공고 정보 가져오기
+        job = jobs_collection.find_one({"_id": ObjectId(job_id)})
+        if not job:
+            return jsonify({"status": "error", "message": "Job not found"}), 404
+
         # 북마크가 없으면 추가
         bookmarks_collection.insert_one({
             "user_id": user_id,
             "job_id": job_id,
+            "location": job.get("location"),  # 공고의 location 정보 추가
             "created_at": datetime.now()  # 북마크 생성 시간 기록
         })
         return jsonify({"status": "success", "message": "Bookmark added"}), 201
-
 
 # 북마크 목록 조회 (GET /bookmarks)
 @bookmarks_bp.route('/', methods=['GET'])
@@ -43,8 +48,17 @@ def get_bookmarks():
 
     # 필터 및 정렬
     query = {"user_id": user_id}
+    
+    # 디버깅: location 값 확인
     if "location" in request.args:
-        query["location"] = {"$regex": request.args["location"], "$options": "i"}
+        location_value = request.args["location"]
+        print(f"[DEBUG] Received location filter: {location_value}")
+        
+        query["location"] = {"$regex": location_value, "$options": "i"}
+        print(f"[DEBUG] Location query added: {query['location']}")
+    else:
+        print("[DEBUG] No location filter applied.")
+
     if "experience" in request.args:
         query["experience"] = request.args["experience"]
     if "salary" in request.args:
@@ -52,13 +66,17 @@ def get_bookmarks():
     if "tech_stack" in request.args:
         query["tech_stack"] = {"$regex": request.args["tech_stack"], "$options": "i"}
 
+    print(f"[DEBUG] Full query: {query}")
+
     # 정렬
     sort_field = request.args.get('sort', 'created_at')  # 기본 정렬 필드: 북마크 추가 시간
     sort_order = int(request.args.get('order', -1))  # 기본 정렬 순서: 내림차순
 
     # 북마크 데이터 가져오기
     bookmarks = list(bookmarks_collection.find(query).skip(skip).limit(per_page).sort(sort_field, sort_order))
+    print(f"[DEBUG] Retrieved bookmarks count: {len(bookmarks)}")
     total_count = bookmarks_collection.count_documents(query)
+    print(f"[DEBUG] Total bookmarks matching query: {total_count}")
 
     # 공고 상세 정보를 함께 반환
     for bookmark in bookmarks:
@@ -67,6 +85,8 @@ def get_bookmarks():
             job["_id"] = str(job["_id"])
             bookmark["job"] = job
         bookmark["_id"] = str(bookmark["_id"])  # ObjectId를 문자열로 변환
+
+    print(f"[DEBUG] Bookmarks with job details: {bookmarks}")
 
     return jsonify({
         "status": "success",
@@ -77,6 +97,7 @@ def get_bookmarks():
             "totalItems": total_count
         }
     }), 200
+
 
 
 # 공고 상세 조회 (GET /jobs/:id)
@@ -107,3 +128,4 @@ def get_job_detail(job_id):
         }), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+

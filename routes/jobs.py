@@ -19,7 +19,7 @@ def list_jobs():
         if "keyword" in request.args:
              query["title"] = {"$regex": request.args["keyword"].strip(), "$options": "i"}
         if "location" in request.args:
-            query["지역"] = {"$regex": f"^{request.args['location']}$", "$options": "i"}
+            query["location"] = {"$regex": f"^{request.args['location']}$", "$options": "i"}
 
         # 디버깅: 생성된 쿼리 확인
         print(f"Generated query: {query}")
